@@ -14,13 +14,13 @@
    limitations under the License.
 """
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 import os, inspect, configparser
 
 
-class Configuration:
+class _Configuration:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -29,7 +29,7 @@ class Configuration:
         return cls._instance
 
     def __init__(self, conf_file, user_path=None, exit_after_create=True):
-        sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
+        sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
         self.__dict__ = {**self.__dict__ , **sections}
         self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
         self.__conf_file = conf_file
@@ -129,10 +129,9 @@ class Configuration:
 
 
 def configuration(cls):
-    #print({value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, Section)})
-    return type(cls.__name__, (Configuration, ), {value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, Section)})
+    return type(cls.__name__, (_Configuration, ), {value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, _Section)})
 
-class Section:
+class _Section:
 
     def __init__(self, setCallbk):
         for key, value in [(key, value) for key, value in self.__class__.__dict__.items() if not key.startswith('_')]:
@@ -148,4 +147,4 @@ class Section:
             raise AttributeError(err_msg)
 
 def section(cls):
-    return type(cls.__name__, (Section, ), {key: value for key, value in cls.__dict__.items() if not key.startswith('_')})
+    return type(cls.__name__, (_Section, ), {key: value for key, value in cls.__dict__.items() if not key.startswith('_')})
