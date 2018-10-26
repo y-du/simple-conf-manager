@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 
 import os, inspect, configparser
@@ -38,7 +38,9 @@ class Configuration:
         if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
             print("Config file '{}' not found".format(self.__conf_file))
             for key, section in sections.items():
-                self.__parser[key] = self.__sectionToDict(section)
+                self.__parser.add_section(key)
+                for ky, value in {k: v for k, v in sections[key].__dict__.items() if not k.startswith('_')}.items():
+                    self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
             self.__writeConfFile()
             print("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
             if exit_after_create:
@@ -59,21 +61,26 @@ class Configuration:
             print("Ignoring unknown section '{}'".format(key))
         for key in missing_sections:
             print("Adding new section '{}'".format(key))
-            self.__parser[key] = self.__sectionToDict(sections[key])
+            self.__parser.add_section(key)
+            for ky, value in {k: v for k, v in sections[key].__dict__.items() if not k.startswith('_')}.items():
+                self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
         for key in known_sections:
             print("Checking keys of section '{}'".format(key))
-            missing_keys, unknown_keys, known_keys = self.__diff({ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')}, tuple(self.__parser[key].keys()))
+            missing_keys, unknown_keys, known_keys = self.__diff([ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')], tuple(self.__parser[key].keys()))
             for ky in unknown_keys:
                 print(" |-Ignoring unknown key '{}'".format(ky))
             for ky in missing_keys:
                 print(" |-Adding new key '{}'".format(ky))
-                self.__parser.set(section=key, option=ky, value=str(sections[key].__dict__[ky]) if type(sections[key].__dict__[ky]) != None else '')
+                self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
             for ky in known_keys:
                 print(" |-Retrieving value of key '{}'".format(ky))
-                sections[key].__dict__[ky] = self.__parseValue(self.__parser.get(section=key, option=ky))
+                sections[key].__dict__[ky] = self.__loadValue(self.__parser.get(section=key, option=ky))
         self.__writeConfFile()
 
-    def __parseValue(self, value: str):
+    def __dumpValue(self, value):
+        return str(value) if type(value) != None else ''
+
+    def __loadValue(self, value: str):
         if len(value) == 0:
             return None
         elif value.isalpha():
@@ -117,7 +124,7 @@ class Configuration:
             print(ex)
 
     def __setKey(self, section, key, value):
-        self.__parser.set(section=section, option=key, value=str(value) if type(value) != None else '')
+        self.__parser.set(section=section, option=key, value=self.__dumpValue(value))
         self.__writeConfFile()
 
 
