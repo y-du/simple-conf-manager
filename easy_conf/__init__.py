@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 
 import os, inspect, configparser
@@ -67,11 +67,36 @@ class Configuration:
                 print(" |-Ignoring unknown key '{}'".format(ky))
             for ky in missing_keys:
                 print(" |-Adding new key '{}'".format(ky))
-                self.__parser.set(section=key, option=ky, value=sections[key].__dict__[ky])
+                self.__parser.set(section=key, option=ky, value=str(sections[key].__dict__[ky]) if type(sections[key].__dict__[ky]) != None else '')
             for ky in known_keys:
                 print(" |-Retrieving value of key '{}'".format(ky))
-                sections[key].__dict__[ky] = self.__parser.get(section=key, option=ky)
+                sections[key].__dict__[ky] = self.__parseValue(self.__parser.get(section=key, option=ky))
         self.__writeConfFile()
+
+    def __parseValue(self, value: str):
+        if len(value) == 0:
+            return None
+        elif value.isalpha():
+            if value in 'True':
+                return True
+            elif value in 'False':
+                return False
+            else:
+                return value
+        else:
+            try:
+                return int(value)
+            except ValueError:
+                pass
+            try:
+                return float(value)
+            except ValueError:
+                pass
+            try:
+                return complex(value)
+            except ValueError:
+                pass
+            return value
 
     def __sectionToDict(self, section):
         return {key: section.__dict__[key] if type(section.__dict__[key]) == str else str(section.__dict__[key]) if section.__dict__[key] else '' for key in section.__dict__.keys() if not key.startswith('_')}
@@ -92,7 +117,7 @@ class Configuration:
             print(ex)
 
     def __setKey(self, section, key, value):
-        self.__parser.set(section=section, option=key, value=value if type(value) == str else str(value) if value else '')
+        self.__parser.set(section=section, option=key, value=str(value) if type(value) != None else '')
         self.__writeConfFile()
 
 
