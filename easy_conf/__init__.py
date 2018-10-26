@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.1.5'
+__version__ = '0.2.0'
 
 
 import os, inspect, configparser
@@ -128,6 +128,10 @@ class Configuration:
         self.__writeConfFile()
 
 
+def configuration(cls):
+    #print({value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, Section)})
+    return type(cls.__name__, (Configuration, ), {value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, Section)})
+
 class Section:
 
     def __init__(self, setCallbk):
@@ -142,3 +146,6 @@ class Section:
         else:
             err_msg = "assignment of new attribute '{}' to '{}' not allowed".format(key, self.__class__.__qualname__)
             raise AttributeError(err_msg)
+
+def section(cls):
+    return type(cls.__name__, (Section, ), {key: value for key, value in cls.__dict__.items() if not key.startswith('_')})
