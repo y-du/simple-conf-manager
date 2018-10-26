@@ -68,12 +68,12 @@ class Configuration:
             print("Checking keys of section '{}'".format(key))
             missing_keys, unknown_keys, known_keys = self.__diff([ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')], tuple(self.__parser[key].keys()))
             for ky in unknown_keys:
-                print(" |-Ignoring unknown key '{}'".format(ky))
+                print("Ignoring unknown key '{}' in section '{}'".format(ky, key))
             for ky in missing_keys:
-                print(" |-Adding new key '{}'".format(ky))
+                print("Adding new key '{}' in section '{}'".format(ky, key))
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
             for ky in known_keys:
-                print(" |-Retrieving value of key '{}'".format(ky))
+                print("Retrieving value of key '{}' in section '{}'".format(ky, key))
                 sections[key].__dict__[ky] = self.__loadValue(self.__parser.get(section=key, option=ky))
         self.__writeConfFile()
 
