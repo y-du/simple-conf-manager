@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 
 import os, inspect, configparser
@@ -69,6 +69,7 @@ class Configuration:
                 print(" |-Adding new key '{}'".format(ky))
                 self.__parser.set(section=key, option=ky, value=sections[key].__dict__[ky])
             for ky in known_keys:
+                print(" |-Retrieving value of key '{}'".format(ky))
                 sections[key].__dict__[ky] = self.__parser.get(section=key, option=ky)
         self.__writeConfFile()
 
