@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 import os, inspect, configparser
@@ -78,7 +78,7 @@ class Configuration:
         self.__writeConfFile()
 
     def __dumpValue(self, value):
-        return str(value) if type(value) != None else ''
+        return str(value) if type(value) != type(None) else ''
 
     def __loadValue(self, value: str):
         if len(value) == 0:
