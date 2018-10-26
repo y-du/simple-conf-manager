@@ -96,12 +96,12 @@ class Section:
     def __init__(self, setCallbk):
         for key, value in [(key, value) for key, value in self.__class__.__dict__.items() if not key.startswith('_')]:
             self.__dict__[key] = value
-        self.__dict__['setCallbk'] = setCallbk
+        self.__dict__['_setCallbk'] = setCallbk
 
     def __setattr__(self, key, value):
         if key in self.__dict__.keys():
             super().__setattr__(key, value)
-            self.setCallbk(str(self.__class__.__name__), key, value)
+            self._setCallbk(str(self.__class__.__name__), key, value)
         else:
             err_msg = "assignment of new attribute '{}' to '{}' not allowed".format(key, self.__class__.__qualname__)
             raise AttributeError(err_msg)
