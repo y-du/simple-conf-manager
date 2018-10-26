@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 
 import os, inspect, configparser
@@ -29,16 +29,16 @@ class Configuration:
         return cls._instance
 
     def __init__(self, conf_file, user_path=None, exit_after_create=True):
-        self.__section_classes = {item.__name__: item for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
-        #self.__dict__ = {**self.__dict__ , **self.__sections}
+        sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
+        self.__dict__ = {**self.__dict__ , **sections}
         self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
         self.__conf_file = conf_file
         self.__parser = configparser.ConfigParser()
 
         if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
             print("Config file '{}' not found".format(self.__conf_file))
-            for section in self.__section_classes.values():
-                self.__parser[section.__name__] = self.__sectionClassToDict(section)
+            for key, section in sections.items():
+                self.__parser[key] = self.__sectionToDict(section)
             self.__writeConfFile()
             print("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
             if exit_after_create:
@@ -48,36 +48,40 @@ class Configuration:
             try:
                 print("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
                 self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
-                self.__loadConfig()
+                self.__loadConfig(sections)
             except Exception as ex:
                 print(ex)
 
-    def __loadConfig(self):
-        missing_sections, unknown_sections = self.__diff(self.__section_classes, self.__parser.sections())
+    def __loadConfig(self, sections):
+        missing_sections, unknown_sections, known_sections = self.__diff(sections, self.__parser.sections())
         print("Checking sections ...")
         for key in unknown_sections:
             print("Ignoring unknown section '{}'".format(key))
-            #self.__parser.remove_section(key)
         for key in missing_sections:
             print("Adding new section '{}'".format(key))
-            self.__parser[key] = self.__sectionClassToDict(self.__section_classes[key])
-            #self.__dict__[key] = self.__section_classes[key](self.__setKey)
-        print("Checking keys ...")
-        for key, section in self.__section_classes.items():
-            #missing_keys, unknown_keys = self.__diff(self.__section_classes[key])
-            print(self.__section_classes[key].__dict__)
-            print(dict(self.__parser[key].items()))
+            self.__parser[key] = self.__sectionToDict(sections[key])
+        for key in known_sections:
+            print("Checking keys of section '{}'".format(key))
+            missing_keys, unknown_keys, known_keys = self.__diff({ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')}, tuple(self.__parser[key].keys()))
+            for ky in unknown_keys:
+                print(" |-Ignoring unknown key '{}'".format(ky))
+            for ky in missing_keys:
+                print(" |-Adding new key '{}'".format(ky))
+                self.__parser.set(section=key, option=ky, value=sections[key].__dict__[ky])
+            for ky in known_keys:
+                sections[key].__dict__[ky] = self.__parser.get(section=key, option=ky)
         self.__writeConfFile()
 
-    def __sectionClassToDict(self, cls):
-        return {i: cls.__dict__[i] if type(cls.__dict__[i]) == str else str(cls.__dict__[i]) if cls.__dict__[i] else '' for i in cls.__dict__.keys() if not i.startswith('_')}
+    def __sectionToDict(self, section):
+        return {key: section.__dict__[key] if type(section.__dict__[key]) == str else str(section.__dict__[key]) if section.__dict__[key] else '' for key in section.__dict__.keys() if not key.startswith('_')}
 
     def __diff(self, known, unknown):
         known_set = set(known)
         unknown_set = set(unknown)
         missing = known_set - unknown_set
         new = unknown_set - known_set
-        return missing, new
+        intersection = known_set.intersection(unknown_set)
+        return missing, new, intersection
 
     def __writeConfFile(self):
         try:
