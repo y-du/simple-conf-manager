@@ -18,12 +18,12 @@ import setuptools
 
 def read_version():
     values = dict()
-    with open('easy_conf/__init__.py', 'r') as init_file:
+    with open('simple_conf/__init__.py', 'r') as init_file:
         exec(init_file.read(), values)
     return values.get('__version__')
 
 setuptools.setup(
-    name='easy-conf-manager',
+    name='simple-conf-manager',
     version=read_version(),
     author='Yann Dumont',
     description='...',
