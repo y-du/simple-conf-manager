@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 __title__ = 'simple-conf-manager'
 __description__ = ''
 __url__ = 'https://github.com/y-du/simple-conf-manager'
@@ -23,7 +23,11 @@ __license__ = 'Apache License 2.0'
 __copyright__ = 'Copyright (c) 2018 Yann Dumont'
 
 
-import os, inspect, configparser
+import os, inspect, configparser, logging
+
+
+root_logger = logging.getLogger('simple-conf')
+root_logger.propagate = False
 
 
 class _Configuration:
@@ -40,47 +44,49 @@ class _Configuration:
         self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
         self.__conf_file = conf_file
         self.__pers_def = pers_def
+        self.__logger: logging.Logger = root_logger.getChild(self.__class__.__name__)
         self.__parser = configparser.ConfigParser()
 
         if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
-            print("Config file '{}' not found".format(self.__conf_file))
+            self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
             for key, section in sections.items():
                 self.__parser.add_section(key)
                 for ky, value in {k: v for k, v in sections[key].__dict__.items() if not k.startswith('_')}.items():
                     self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
             self.__writeConfFile()
-            print("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
+            self.__logger.info("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
             if ext_aft_crt:
                 exit()
 
         if not self.__parser.sections():
             try:
-                print("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
+                self.__logger.info("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
                 self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
                 self.__syncConfig(sections)
+                self.__logger.info("Successfully loaded config from '{}'".format(self.__conf_file))
             except Exception as ex:
-                print(ex)
+                self.__logger.error("Loading config failed - {}".format(ex))
 
     def __syncConfig(self, sections):
         missing_sections, unknown_sections, known_sections = self.__diff(sections, self.__parser.sections())
-        print("Checking sections ...")
+        self.__logger.debug("Checking sections ...")
         for key in unknown_sections:
-            print("Ignoring unknown section '{}'".format(key))
+            self.__logger.debug("Ignoring unknown section '{}'".format(key))
         for key in missing_sections:
-            print("Adding new section '{}'".format(key))
+            self.__logger.debug("Adding new section '{}'".format(key))
             self.__parser.add_section(key)
             for ky, value in {k: v for k, v in sections[key].__dict__.items() if not k.startswith('_')}.items():
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
         for key in known_sections:
-            print("Checking keys of section '{}'".format(key))
+            self.__logger.debug("Checking keys of section '{}'".format(key))
             missing_keys, unknown_keys, known_keys = self.__diff([ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')], tuple(self.__parser[key].keys()))
             for ky in unknown_keys:
-                print("Ignoring unknown key '{}' in section '{}'".format(ky, key))
+                self.__logger.debug("Ignoring unknown key '{}' in section '{}'".format(ky, key))
             for ky in missing_keys:
-                print("Adding new key '{}' in section '{}'".format(ky, key))
+                self.__logger.debug("Adding new key '{}' in section '{}'".format(ky, key))
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
             for ky in known_keys:
-                print("Retrieving value of key '{}' in section '{}'".format(ky, key))
+                self.__logger.debug("Retrieving value of key '{}' in section '{}'".format(ky, key))
                 value = self.__loadValue(self.__parser.get(section=key, option=ky))
                 if type(value) != type(None):
                     sections[key].__dict__[ky] = value
@@ -133,7 +139,7 @@ class _Configuration:
             with open(os.path.join(self.__conf_path, self.__conf_file), 'w') as cf:
                 self.__parser.write(cf)
         except Exception as ex:
-            print(ex)
+            self.__logger.error("Writing to config file '{}' failed - {}".format(self.__conf_file, ex))
 
     def __setKey(self, section, key, value):
         self.__parser.set(section=section, option=key, value=self.__dumpValue(value))
