@@ -129,7 +129,12 @@ class _Configuration:
 
 
 def configuration(cls):
-    return type(cls.__name__, (_Configuration, ), {value.__name__: value for value in cls.__dict__.values() if inspect.isclass(value) and issubclass(value, _Section)})
+    attr_dict = cls.__dict__.copy()
+    del attr_dict['__dict__']
+    del attr_dict['__weakref__']
+    sub_cls = type(cls.__name__, (_Configuration,), attr_dict)
+    sub_cls.__qualname__ = cls.__qualname__
+    return sub_cls
 
 class _Section:
 
@@ -147,4 +152,9 @@ class _Section:
             raise AttributeError(err_msg)
 
 def section(cls):
-    return type(cls.__name__, (_Section, ), {key: value for key, value in cls.__dict__.items() if not key.startswith('_')})
+    attr_dict = cls.__dict__.copy()
+    del attr_dict['__dict__']
+    del attr_dict['__weakref__']
+    sub_cls = type(cls.__name__, (_Section, ), attr_dict)
+    sub_cls.__qualname__ = cls.__qualname__
+    return sub_cls
