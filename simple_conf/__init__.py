@@ -57,11 +57,11 @@ class _Configuration:
             try:
                 print("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
                 self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
-                self.__loadConfig(sections)
+                self.__syncConfig(sections)
             except Exception as ex:
                 print(ex)
 
-    def __loadConfig(self, sections):
+    def __syncConfig(self, sections):
         missing_sections, unknown_sections, known_sections = self.__diff(sections, self.__parser.sections())
         print("Checking sections ...")
         for key in unknown_sections:
