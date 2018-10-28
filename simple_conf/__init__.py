@@ -55,7 +55,7 @@ class _Configuration:
                     if not ky.startswith('_'):
                         self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
             self.__writeConfFile()
-            self.__logger.info("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
+            self.__logger.warning("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
             if ext_aft_crt:
                 exit()
 
