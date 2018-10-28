@@ -16,19 +16,24 @@
 
 import setuptools
 
-def read_version():
+def read_metadata():
     values = dict()
     with open('simple_conf/__init__.py', 'r') as init_file:
         exec(init_file.read(), values)
-    return values.get('__version__')
+    metadata = {key: value for key, value in values.items() if key.startswith('__')}
+    return metadata
+
+metadata = read_metadata()
+
 
 setuptools.setup(
-    name='simple-conf-manager',
-    version=read_version(),
-    author='Yann Dumont',
-    description='...',
-    license='Apache License 2.0',
-    url='...',
+    name=metadata.get('__title__'),
+    version=metadata.get('__version__'),
+    author=metadata.get('__author__'),
+    description=metadata.get('__description__'),
+    license=metadata.get('__license__'),
+    url=metadata.get('__url__'),
+    copyright=metadata.get('__copyright__'),
     packages=setuptools.find_packages(),
     python_requires='>=3.5.3',
     classifiers=(

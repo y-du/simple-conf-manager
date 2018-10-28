@@ -14,7 +14,13 @@
    limitations under the License.
 """
 
-__version__ = '0.2.2'
+__version__ = '0.2.4'
+__title__ = 'simple-conf-manager'
+__description__ = ''
+__url__ = 'https://github.com/y-du/simple-conf-manager'
+__author__ = 'Yann Dumont'
+__license__ = 'Apache License 2.0'
+__copyright__ = 'Copyright (c) 2018 Yann Dumont'
 
 
 import os, inspect, configparser
