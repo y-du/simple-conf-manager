@@ -156,6 +156,7 @@ def configuration(cls):
     sub_cls.__qualname__ = cls.__qualname__
     return sub_cls
 
+
 class _Section:
 
     def __init__(self, setCallbk):
@@ -171,6 +172,7 @@ class _Section:
         else:
             err_msg = "assignment of new attribute '{}' to '{}' not allowed".format(key, self.__class__.__qualname__)
             raise AttributeError(err_msg)
+
 
 def section(cls):
     attr_dict = cls.__dict__.copy()
