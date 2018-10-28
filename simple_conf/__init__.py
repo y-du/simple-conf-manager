@@ -16,7 +16,7 @@
 
 __version__ = '0.4.0'
 __title__ = 'simple-conf-manager'
-__description__ = ''
+__description__ = 'Define configuration structures, read and write config files and access your configuration via an object tree that plays well with IDE code completion.'
 __url__ = 'https://github.com/y-du/simple-conf-manager'
 __author__ = 'Yann Dumont'
 __license__ = 'Apache License 2.0'
