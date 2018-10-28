@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.2.5'
+__version__ = '0.3.0'
 __title__ = 'simple-conf-manager'
 __description__ = ''
 __url__ = 'https://github.com/y-du/simple-conf-manager'
@@ -34,11 +34,12 @@ class _Configuration:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, conf_file, user_path=None, ext_aft_crt=True):
+    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True, ):
         sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
         self.__dict__ = {**self.__dict__ , **sections}
         self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
         self.__conf_file = conf_file
+        self.__pers_def = pers_def
         self.__parser = configparser.ConfigParser()
 
         if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
@@ -83,6 +84,9 @@ class _Configuration:
                 value = self.__loadValue(self.__parser.get(section=key, option=ky))
                 if type(value) != type(None):
                     sections[key].__dict__[ky] = value
+                else:
+                    if self.__pers_def:
+                        self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
         self.__writeConfFile()
 
     def __dumpValue(self, value):
