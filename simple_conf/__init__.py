@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.2.4'
+__version__ = '0.2.5'
 __title__ = 'simple-conf-manager'
 __description__ = ''
 __url__ = 'https://github.com/y-du/simple-conf-manager'
@@ -80,7 +80,9 @@ class _Configuration:
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
             for ky in known_keys:
                 print("Retrieving value of key '{}' in section '{}'".format(ky, key))
-                sections[key].__dict__[ky] = self.__loadValue(self.__parser.get(section=key, option=ky))
+                value = self.__loadValue(self.__parser.get(section=key, option=ky))
+                if type(value) != type(None):
+                    sections[key].__dict__[ky] = value
         self.__writeConfFile()
 
     def __dumpValue(self, value):
