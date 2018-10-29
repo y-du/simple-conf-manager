@@ -38,7 +38,7 @@ class _Configuration:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True, ):
+    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True):
         sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
         self.__dict__ = {**self.__dict__ , **sections}
         self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
