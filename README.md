@@ -44,9 +44,7 @@ Quick start
     conf = MyConf('test.conf')
     
     print(conf.MySection.val_1) # -> 123
-    
-    conf.MySection.val_1 = 456
-    
+    conf.MySection.val_1 = 456  # set attribute and write to test.conf
     print(conf.MySection.val_1) # -> 456
 
 Requirements
