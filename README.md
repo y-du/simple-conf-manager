@@ -6,6 +6,7 @@ Define configuration structures, read and write config files and access your con
 ---
 
 + [Description](#description)
++ [Quick start](#quick-start)
 + [Requirements](#requirements)
 + [Installation](#installation)
 + [Usage](#usage)
@@ -21,9 +22,32 @@ The standard python `configparser` package is great at what it does, reading fro
 Keys defined in a config file must be provided as strings, increasing the risk of errors if config data must be accessed from different locations.
 Importing numerous global values as a workaround is a nuisance and brings it's own set of drawbacks like writing to a config file during runtime and having to manage both the global variable and the config file.
 
-With `simple-conf-manager` the configuration is defined as a "structure" in your code and is accessible for IDE code completion mechanisms, thus ruling out having to guess config keys during implementation.
+With `simple-conf-manager` the configuration is defined as a "structure" in your code and accessible for IDE code completion mechanisms, thus ruling out having to guess config keys during implementation.
 Configurations are stored as object trees during runtime, values reside in attributes and can be changed with a simple assignment statement. Every change is seamlessly written to the underlying config file.
+See the [Usage](#usage) section for more information.
 
+
+Quick start
+---
+
+    from simple_conf import configuration, section
+    
+    @configuration
+    class MyConf:
+
+        @section
+        class MySection:
+            val_1 = 123
+            val_2 = 'test'
+            val_3 = True
+
+    conf = MyConf('test.conf')
+    
+    print(conf.MySection.val_1) # -> 123
+    
+    conf.MySection.val_1 = 456
+    
+    print(conf.MySection.val_1) # -> 456
 
 Requirements
 ----
