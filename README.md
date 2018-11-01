@@ -12,6 +12,7 @@ Define configuration structures, read and write config files and access your con
 + [Usage](#usage)
     + [Defining configurations](#defining-configurations)
     + [Initializing configurations](#initializing-configurations)
+    + [Setting and getting values](#setting-and-getting-values)
     + [Logging](#logging)
 
 ---
@@ -89,9 +90,10 @@ There's no limit to how many configurations you create just make sure to use dif
         class MySection:
             key = 'value'
 
+
 #### Initializing configurations
 
-To use your configuration your must initialize it first. 
+To use your configuration you must initialize it first. 
 By using the `@configuration` decorator the init signature has changed:
 
     conf = MyConf(conf_file, user_path=None, ext_aft_crt=True, pers_def=True)
@@ -103,6 +105,19 @@ By using the `@configuration` decorator the init signature has changed:
 - `ext_aft_crt` exit the script after config file creation, set to `False` if execution should continue.
 
 - `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, set to `False` if the value is to remain empty.
+
+
+#### Setting and getting values
+
+During runtime values are stored in attributes housed in objects representing the respective sections.
+Setting and getting values is straightforward:
+ 
+    configuration.section.key = 'value' # set
+
+    value = configuration.section.key   # get
+
+Possible types are: `str`, `int`, `float`, `complex`, `bool`, `NoneType`. Other types will be treated as strings.
+
 
 #### Logging
 
