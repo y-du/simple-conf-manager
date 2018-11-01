@@ -22,9 +22,9 @@ The standard python `configparser` package is great at what it does, reading fro
 Keys defined in a config file must be provided as strings, increasing the risk of errors if config data must be accessed from different locations.
 Importing numerous global values as a workaround is a nuisance and brings it's own set of drawbacks like writing to a config file during runtime and having to manage both the global variable and the config file.
 
-With `simple-conf-manager` the configuration is defined as a "structure" in your code and accessible for IDE code completion mechanisms, thus ruling out having to guess config keys during implementation.
+With `simple-conf-manager` the configuration is defined as a "structure" in your code and is accessible by IDE code completion mechanisms, thus ruling out having to guess config keys during implementation.
 Configurations are stored as object trees during runtime, values reside in attributes and can be changed with a simple assignment statement. Every change is seamlessly written to the underlying config file.
-See the [Usage](#usage) section for more information.
+See [Usage](#usage) for more information.
 
 
 Quick start
@@ -74,5 +74,31 @@ Usage
 
 #### Defining configurations
 
+To create a configuration create a `class` and decorate it with `@configuration`.
+Within this class you add sections to your configuartion by creating further classes and decorating them with `@section`.
+Sections house the keys and default values in the form of class attributes.
+There's no limit to how many configurations you create just make sure to use different config files.
+
+    from simple_conf import configuration, section
+    
+    @configuration
+    class MyConf:
+
+        @section
+        class MySection:
+            key = 'value'
+
 #### Initializing configurations
 
+To use your configuration your must initialize it first. 
+By using the `@configuration` decorator the init signature has changed:
+
+    conf = MyConf(conf_file, user_path=None, ext_aft_crt=True, pers_def=True)
+
+- `conf_file` required, name of the config file as a string.
+
+- `user_path` by default config files are created in the current working dictionary, provide a custom path if a different location is desired.
+
+- `ext_aft_crt` exit the script after config file creation, set to `False` with execution should continue.
+
+- `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, set to `False` if the value is to remain empty.
