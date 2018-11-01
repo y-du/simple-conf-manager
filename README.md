@@ -104,7 +104,7 @@ By using the `@configuration` decorator the init signature has changed:
 
 - `ext_aft_crt` exit the script after config file creation, set to `False` if execution should continue.
 
-- `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, set to `False` if the value is to remain empty.
+- `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, if the value is to remain empty set to `False`.
 
 
 #### Setting and getting values
