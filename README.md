@@ -93,7 +93,8 @@ There's no limit to how many configurations you create just make sure to use dif
 
 #### Initializing configurations
 
-To use your configuration you must initialize it first. 
+To use your configuration you must instantiate it first. 
+Multiple instantiations of the same configuration will always yield the same instance. 
 By using the `@configuration` decorator the init signature has changed:
 
     conf = MyConf(conf_file, user_path=None, ext_aft_crt=True, pers_def=True)
