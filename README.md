@@ -12,6 +12,7 @@ Define configuration structures, read and write config files and access your con
 + [Usage](#usage)
     + [Defining configurations](#defining-configurations)
     + [Initializing configurations](#initializing-configurations)
+    + [Logging](#logging)
 
 ---
 
@@ -97,8 +98,21 @@ By using the `@configuration` decorator the init signature has changed:
 
 - `conf_file` required, name of the config file as a string.
 
-- `user_path` by default config files are created in the current working dictionary, provide a custom path if a different location is desired.
+- `user_path` by default config files are created in the current working dictionary, provide a custom path as a string if a different location is desired.
 
-- `ext_aft_crt` exit the script after config file creation, set to `False` with execution should continue.
+- `ext_aft_crt` exit the script after config file creation, set to `False` if execution should continue.
 
 - `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, set to `False` if the value is to remain empty.
+
+#### Logging
+
+If your project uses the python `logging` facility you can combine the output produced by `simple-conf-manager` with your log output.
+
+Retrieve the "simple-conf" logger via:
+
+    logger = logging.getLogger('simple-conf')
+
+Add your handler to the logger and optionally set the desired level:
+
+    logger.addHandler(your_handler)
+    logger.setLevel(logging.INFO)   # optional
