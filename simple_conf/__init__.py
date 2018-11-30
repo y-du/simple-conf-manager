@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 __title__ = 'simple-conf-manager'
 __description__ = 'Define configuration structures, read and write config files and access your configuration via an object tree that plays well with IDE code completion.'
 __url__ = 'https://github.com/y-du/simple-conf-manager'
@@ -45,7 +45,7 @@ class _Configuration:
         self.__conf_file = conf_file
         self.__pers_def = pers_def
         self.__logger = root_logger.getChild(self.__class__.__name__)
-        self.__parser = configparser.ConfigParser()
+        self.__parser = configparser.ConfigParser(interpolation=None)
 
         if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
             self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
