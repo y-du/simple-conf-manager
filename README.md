@@ -68,7 +68,7 @@ Upgrade to new version:
 
 Uninstall: 
 
-- `pip uninstall sepl-connector-client`
+- `pip uninstall simple-conf-manager`
 
 
 Usage
