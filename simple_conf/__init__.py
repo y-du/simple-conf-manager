@@ -1,5 +1,5 @@
 """
-   Copyright 2018 Yann Dumont
+   Copyright 2019 Yann Dumont
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.4.3'
+__version__ = '0.5.0'
 __title__ = 'simple-conf-manager'
 __description__ = 'Define configuration structures, read and write config files and access your configuration via an object tree that plays well with IDE code completion.'
 __url__ = 'https://github.com/y-du/simple-conf-manager'
