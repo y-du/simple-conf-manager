@@ -30,43 +30,56 @@ root_logger = logging.getLogger('simple-conf')
 root_logger.propagate = False
 
 
+def initConfig(config):
+    config._Configuration__initConfig()
+
 class _Configuration:
-    _instance = None
+    __instance = None
 
     def __new__(cls, *args, **kwargs):
-        if not isinstance(cls._instance, cls):
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        if not isinstance(cls.__instance, cls):
+            return super().__new__(cls)
+        return cls.__instance
 
-    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True):
-        sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
-        self.__dict__ = {**self.__dict__ , **sections}
-        self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
-        self.__conf_file = conf_file
-        self.__pers_def = pers_def
-        self.__logger = root_logger.getChild(self.__class__.__name__)
-        self.__parser = configparser.ConfigParser(interpolation=None)
+    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True, init=True):
+        if not self.__class__.__instance:
+            self.__class__.__instance = self
+            self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
+            self.__conf_file = conf_file
+            self.__ext_aft_crt = ext_aft_crt
+            self.__pers_def = pers_def
+            self.__logger = root_logger.getChild(self.__class__.__name__)
+            self.__parser = configparser.ConfigParser(interpolation=None)
+            self.__initiated = False
+            if init:
+                self.__initConfig()
+        else:
+            self.__logger.warning("Config '{}' already instantiated".format(self.__class__.__name__))
 
-        if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
-            self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
-            for key, section in sections.items():
-                self.__parser.add_section(key)
-                for ky, value in section.__dict__.items():
-                    if not ky.startswith('_'):
-                        self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
-            self.__writeConfFile()
-            self.__logger.warning("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
-            if ext_aft_crt:
-                exit()
-
-        if not self.__parser.sections():
-            try:
-                self.__logger.info("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
-                self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
-                self.__syncConfig(sections)
-                self.__logger.info("Successfully loaded configuration from '{}'".format(self.__conf_file))
-            except Exception as ex:
-                self.__logger.error("Loading configuration from '{}' failed - {}".format(self.__conf_file, ex))
+    def __initConfig(self):
+        if not self.__initiated:
+            sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
+            self.__dict__ = {**self.__dict__, **sections}
+            if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
+                self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
+                for key, section in sections.items():
+                    self.__parser.add_section(key)
+                    for ky, value in section.__dict__.items():
+                        if not ky.startswith('_'):
+                            self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
+                self.__writeConfFile()
+                self.__logger.warning("Created config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
+                if self.__ext_aft_crt:
+                    exit()
+            if not self.__parser.sections():
+                try:
+                    self.__logger.info("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
+                    self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
+                    self.__syncConfig(sections)
+                    self.__logger.info("Successfully loaded configuration from '{}'".format(self.__conf_file))
+                except Exception as ex:
+                    self.__logger.error("Loading configuration from '{}' failed - {}".format(self.__conf_file, ex))
+            self.__initiated = True
 
     def __syncConfig(self, sections):
         missing_sections, unknown_sections, known_sections = self.__diff(sections, self.__parser.sections())
