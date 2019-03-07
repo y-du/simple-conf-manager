@@ -24,11 +24,7 @@ root_logger = logging.getLogger('simple-conf')
 root_logger.propagate = False
 
 
-def initConfig(config):
-    config._Configuration__initConfig()
-
-
-class _Configuration:
+class Configuration:
     __instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -36,7 +32,7 @@ class _Configuration:
             return super().__new__(cls)
         return cls.__instance
 
-    def __init__(self, conf_file, user_path=None, ext_aft_crt=True, pers_def=True, init=True):
+    def __init__(self, conf_file: str, user_path: str = None, ext_aft_crt: bool = True, pers_def: bool = True, init: bool = True):
         if not self.__class__.__instance:
             self.__class__.__instance = self
             self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
@@ -53,7 +49,7 @@ class _Configuration:
 
     def __initConfig(self):
         if not self.__initiated:
-            sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, _Section)}
+            sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
             self.__dict__ = {**self.__dict__, **sections}
             if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
                 self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
@@ -160,12 +156,16 @@ def configuration(cls):
     attr_dict = cls.__dict__.copy()
     del attr_dict['__dict__']
     del attr_dict['__weakref__']
-    sub_cls = type(cls.__name__, (_Configuration,), attr_dict)
+    sub_cls = type(cls.__name__, (Configuration,), attr_dict)
     sub_cls.__qualname__ = cls.__qualname__
     return sub_cls
 
 
-class _Section:
+def initConfig(config: Configuration):
+    config._Configuration__initConfig()
+
+
+class Section:
 
     def __init__(self, setCallbk):
         for key, value in self.__class__.__dict__.items():
@@ -186,6 +186,6 @@ def section(cls):
     attr_dict = cls.__dict__.copy()
     del attr_dict['__dict__']
     del attr_dict['__weakref__']
-    sub_cls = type(cls.__name__, (_Section, ), attr_dict)
+    sub_cls = type(cls.__name__, (Section,), attr_dict)
     sub_cls.__qualname__ = cls.__qualname__
     return sub_cls
