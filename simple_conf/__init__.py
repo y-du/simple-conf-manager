@@ -23,9 +23,4 @@ __license__ = 'Apache License 2.0'
 __copyright__ = 'Copyright (c) 2018 Yann Dumont'
 
 
-from .config import *
-
-__all__ = (
-    config.__all__
-
-)
+from ._manager import configuration, section, initConfig

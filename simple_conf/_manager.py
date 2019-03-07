@@ -161,7 +161,7 @@ def configuration(cls):
     return sub_cls
 
 
-def initConfig(config: Configuration):
+def initConfig(config):
     config._Configuration__initConfig()
 
 
