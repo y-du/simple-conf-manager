@@ -58,13 +58,13 @@ Python 3.5 or later.
 Installation
 ----
 
-Install the `simple-conf-manager` package via pip by issuing the following command with the desired release `vX.X.X`: 
+Install the `simple-conf-manager` package via pip by issuing the following command with the desired release `X.X.X`: 
 
-- `pip install git+https://github.com/y-du/simple-conf-manager.git@vX.X.X` 
+- `pip install git+https://github.com/y-du/simple-conf-manager.git@X.X.X` 
 
 Upgrade to new version: 
 
-- `pip install --upgrade git+https://github.com/y-du/simple-conf-manager.git@vX.X.X`
+- `pip install --upgrade git+https://github.com/y-du/simple-conf-manager.git@X.X.X`
 
 Uninstall: 
 
