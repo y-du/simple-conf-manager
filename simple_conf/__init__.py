@@ -14,7 +14,7 @@
    limitations under the License.
 """
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 __title__ = 'simple-conf-manager'
 __description__ = 'Define configuration structures, read and write config files and access your configuration via an object tree that plays well with IDE code completion.'
 __url__ = 'https://github.com/y-du/simple-conf-manager'
@@ -30,28 +30,27 @@ _root_logger = logging.getLogger('simple-conf')
 _root_logger.propagate = False
 
 
-class _Configuration:
-    __instance = None
+class Singleton(type):
+    __instances = dict()
 
-    def __new__(cls, *args, **kwargs):
-        if not isinstance(cls.__instance, cls):
-            return super().__new__(cls)
-        return cls.__instance
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls.__instances:
+            cls.__instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls.__instances[cls]
 
+
+class _Configuration(metaclass=Singleton):
     def __init__(self, conf_file: str, user_path: str = None, ext_aft_crt: bool = True, pers_def: bool = True, init: bool = True):
-        if not self.__class__.__instance:
-            self.__class__.__instance = self
-            self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
-            self.__conf_file = conf_file
-            self.__ext_aft_crt = ext_aft_crt
-            self.__pers_def = pers_def
-            self.__logger = _root_logger.getChild(self.__class__.__name__)
-            self.__parser = configparser.ConfigParser(interpolation=None)
-            self.__initiated = False
-            if init:
-                self.__initConfig()
-        else:
-            self.__logger.warning("Config '{}' already instantiated".format(self.__class__.__name__))
+        self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
+        self.__conf_file = conf_file
+        self.__ext_aft_crt = ext_aft_crt
+        self.__pers_def = pers_def
+        self.__logger = _root_logger.getChild(self.__class__.__name__)
+        self.__parser = configparser.ConfigParser(interpolation=None)
+        self.__initiated = False
+        print(123345464)
+        if init:
+            self.__initConfig()
 
     def __initConfig(self):
         if not self.__initiated:
