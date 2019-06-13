@@ -18,6 +18,7 @@
 __all__ = ('configuration', 'section', 'initConfig')
 
 
+from threading import Lock
 import os, inspect, configparser, logging
 
 
@@ -42,13 +43,14 @@ class Configuration(metaclass=Singleton):
         self.__pers_def = pers_def
         self.__logger = _root_logger.getChild(self.__class__.__name__)
         self.__parser = configparser.ConfigParser(interpolation=None)
+        self.__lock = Lock()
         self.__initiated = False
         if init:
             self.__initConfig()
 
     def __initConfig(self):
         if not self.__initiated:
-            sections = {item.__name__: item(self.__setKey) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
+            sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
             self.__dict__ = {**self.__dict__, **sections}
             if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
                 self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
@@ -166,19 +168,21 @@ def initConfig(config):
 
 class Section:
 
-    def __init__(self, setCallbk):
+    def __init__(self, setCallbk, lock):
         for key, value in self.__class__.__dict__.items():
             if not key.startswith('_'):
                 self.__dict__[key] = value
         self.__dict__['_setCallbk'] = setCallbk
+        self.__dict__['_lock'] = lock
 
     def __setattr__(self, key, value):
-        if key in self.__dict__.keys():
-            super().__setattr__(key, value)
-            self._setCallbk(str(self.__class__.__name__), key, value)
-        else:
-            err_msg = "assignment of new attribute '{}' to '{}' not allowed".format(key, self.__class__.__qualname__)
-            raise AttributeError(err_msg)
+        with self._lock:
+            if key in self.__dict__.keys():
+                super().__setattr__(key, value)
+                self._setCallbk(str(self.__class__.__name__), key, value)
+            else:
+                err_msg = "assignment of new attribute '{}' to '{}' not allowed".format(key, self.__class__.__qualname__)
+                raise AttributeError(err_msg)
 
 
 def section(cls):
