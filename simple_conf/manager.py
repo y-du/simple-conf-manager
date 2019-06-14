@@ -19,6 +19,7 @@ __all__ = ('configuration', 'section', 'initConfig')
 
 
 from threading import Lock
+from os import getenv
 import os, inspect, configparser, logging
 
 
@@ -79,12 +80,19 @@ class Configuration(metaclass=Singleton):
         for key in unknown_sections:
             self.__logger.debug("Ignoring unknown section '{}'".format(key))
         for key in missing_sections:
+            env_data = self.__getEnvData(key)
             self.__logger.debug("Adding new section '{}'".format(key))
             self.__parser.add_section(key)
             for ky, value in sections[key].__dict__.items():
                 if not ky.startswith('_'):
                     self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    sections[key].__dict__[ky] = env_data[ky]
         for key in known_sections:
+            env_data = self.__getEnvData(key)
             self.__logger.debug("Checking keys of section '{}'".format(key))
             missing_keys, unknown_keys, known_keys = self.__diff([ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')], tuple(self.__parser[key].keys()))
             for ky in unknown_keys:
@@ -92,15 +100,41 @@ class Configuration(metaclass=Singleton):
             for ky in missing_keys:
                 self.__logger.debug("Adding new key '{}' in section '{}'".format(ky, key))
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    sections[key].__dict__[ky] = env_data[ky]
             for ky in known_keys:
-                self.__logger.debug("Retrieving value of key '{}' in section '{}'".format(ky, key))
-                value = self.__loadValue(self.__parser.get(section=key, option=ky))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    value = env_data[ky]
+                else:
+                    self.__logger.debug("Retrieving value of key '{}' in section '{}'".format(ky, key))
+                    value = self.__loadValue(self.__parser.get(section=key, option=ky))
                 if type(value) != type(None):
                     sections[key].__dict__[ky] = value
                 else:
                     if self.__pers_def:
                         self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
         self.__writeConfFile()
+
+    def __getEnvData(self, section: str):
+        env_data = getenv("{}_{}".format(self.__class__.__name__, section).upper())
+        if env_data:
+            self.__logger.debug("Found environment variable for section '{}'".format(section))
+            options = dict()
+            env_data = env_data.split(";")
+            for item in env_data:
+                try:
+                    option, value = item.split(":")
+                    options[option] = self.__loadValue(value)
+                except ValueError:
+                    self.__logger.warning(
+                        "Malformed entry '{}' in environment variable for section '{}'".format(item, section))
+            return options
 
     def __dumpValue(self, value):
         return str(value) if not type(value) is type(None) else ''
