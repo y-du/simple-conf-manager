@@ -19,10 +19,13 @@ __all__ = ('configuration', 'section', 'initConfig')
 
 
 from threading import Lock
-import os, inspect, configparser, logging
+from os import getenv, path
+from logging import getLogger
+from configparser import ConfigParser
+from inspect import getfile, stack, isclass
 
 
-_root_logger = logging.getLogger('simple-conf')
+_root_logger = getLogger('simple-conf')
 _root_logger.propagate = False
 
 
@@ -37,12 +40,12 @@ class Singleton(type):
 
 class Configuration(metaclass=Singleton):
     def __init__(self, conf_file: str, user_path: str = None, ext_aft_crt: bool = True, pers_def: bool = True, init: bool = True):
-        self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
+        self.__conf_path = user_path if user_path else path.abspath(path.split(getfile(stack()[-1].frame))[0])
         self.__conf_file = conf_file
         self.__ext_aft_crt = ext_aft_crt
         self.__pers_def = pers_def
         self.__logger = _root_logger.getChild(self.__class__.__name__)
-        self.__parser = configparser.ConfigParser(interpolation=None)
+        self.__parser = ConfigParser(interpolation=None)
         self.__lock = Lock()
         self.__initiated = False
         if init:
@@ -50,9 +53,9 @@ class Configuration(metaclass=Singleton):
 
     def __initConfig(self):
         if not self.__initiated:
-            sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
+            sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if isclass(item) and issubclass(item, Section)}
             self.__dict__ = {**self.__dict__, **sections}
-            if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
+            if not path.isfile(path.join(self.__conf_path, self.__conf_file)):
                 self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
                 for key, section in sections.items():
                     self.__parser.add_section(key)
@@ -66,7 +69,7 @@ class Configuration(metaclass=Singleton):
             if not self.__parser.sections():
                 try:
                     self.__logger.info("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
-                    self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
+                    self.__parser.read(path.join(self.__conf_path, self.__conf_file))
                     self.__syncConfig(sections)
                     self.__logger.info("Successfully loaded configuration from '{}'".format(self.__conf_file))
                 except Exception as ex:
@@ -79,12 +82,19 @@ class Configuration(metaclass=Singleton):
         for key in unknown_sections:
             self.__logger.debug("Ignoring unknown section '{}'".format(key))
         for key in missing_sections:
+            env_data = self.__getEnvData(key)
             self.__logger.debug("Adding new section '{}'".format(key))
             self.__parser.add_section(key)
             for ky, value in sections[key].__dict__.items():
                 if not ky.startswith('_'):
                     self.__parser.set(section=key, option=ky, value=self.__dumpValue(value))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    sections[key].__dict__[ky] = env_data[ky]
         for key in known_sections:
+            env_data = self.__getEnvData(key)
             self.__logger.debug("Checking keys of section '{}'".format(key))
             missing_keys, unknown_keys, known_keys = self.__diff([ky for ky in sections[key].__dict__.keys() if not ky.startswith('_')], tuple(self.__parser[key].keys()))
             for ky in unknown_keys:
@@ -92,15 +102,41 @@ class Configuration(metaclass=Singleton):
             for ky in missing_keys:
                 self.__logger.debug("Adding new key '{}' in section '{}'".format(ky, key))
                 self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    sections[key].__dict__[ky] = env_data[ky]
             for ky in known_keys:
-                self.__logger.debug("Retrieving value of key '{}' in section '{}'".format(ky, key))
-                value = self.__loadValue(self.__parser.get(section=key, option=ky))
+                if env_data and ky in env_data:
+                    self.__logger.info(
+                        "Setting value for key '{}' in section '{}' from environment variable".format(ky, key)
+                    )
+                    value = env_data[ky]
+                else:
+                    self.__logger.debug("Retrieving value of key '{}' in section '{}'".format(ky, key))
+                    value = self.__loadValue(self.__parser.get(section=key, option=ky))
                 if type(value) != type(None):
                     sections[key].__dict__[ky] = value
                 else:
                     if self.__pers_def:
                         self.__parser.set(section=key, option=ky, value=self.__dumpValue(sections[key].__dict__[ky]))
         self.__writeConfFile()
+
+    def __getEnvData(self, section: str):
+        env_data = getenv("{}_{}".format(self.__class__.__name__, section).upper())
+        if env_data:
+            self.__logger.debug("Found environment variable for section '{}'".format(section))
+            options = dict()
+            env_data = env_data.split(";")
+            for item in env_data:
+                try:
+                    option, value = item.split(":")
+                    options[option] = self.__loadValue(value)
+                except ValueError:
+                    self.__logger.warning(
+                        "Malformed entry '{}' in environment variable for section '{}'".format(item, section))
+            return options
 
     def __dumpValue(self, value):
         return str(value) if not type(value) is type(None) else ''
@@ -143,7 +179,7 @@ class Configuration(metaclass=Singleton):
 
     def __writeConfFile(self):
         try:
-            with open(os.path.join(self.__conf_path, self.__conf_file), 'w') as cf:
+            with open(path.join(self.__conf_path, self.__conf_file), 'w') as cf:
                 self.__parser.write(cf)
         except Exception as ex:
             self.__logger.error("Writing to config file '{}' failed - {}".format(self.__conf_file, ex))
