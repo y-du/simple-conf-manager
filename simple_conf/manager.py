@@ -19,11 +19,13 @@ __all__ = ('configuration', 'section', 'initConfig')
 
 
 from threading import Lock
-from os import getenv
-import os, inspect, configparser, logging
+from os import getenv, path
+from logging import getLogger
+from configparser import ConfigParser
+from inspect import getfile, stack, isclass
 
 
-_root_logger = logging.getLogger('simple-conf')
+_root_logger = getLogger('simple-conf')
 _root_logger.propagate = False
 
 
@@ -38,12 +40,12 @@ class Singleton(type):
 
 class Configuration(metaclass=Singleton):
     def __init__(self, conf_file: str, user_path: str = None, ext_aft_crt: bool = True, pers_def: bool = True, init: bool = True):
-        self.__conf_path = user_path if user_path else os.path.abspath(os.path.split(inspect.getfile(inspect.stack()[-1].frame))[0])
+        self.__conf_path = user_path if user_path else path.abspath(path.split(getfile(stack()[-1].frame))[0])
         self.__conf_file = conf_file
         self.__ext_aft_crt = ext_aft_crt
         self.__pers_def = pers_def
         self.__logger = _root_logger.getChild(self.__class__.__name__)
-        self.__parser = configparser.ConfigParser(interpolation=None)
+        self.__parser = ConfigParser(interpolation=None)
         self.__lock = Lock()
         self.__initiated = False
         if init:
@@ -51,9 +53,9 @@ class Configuration(metaclass=Singleton):
 
     def __initConfig(self):
         if not self.__initiated:
-            sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if inspect.isclass(item) and issubclass(item, Section)}
+            sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if isclass(item) and issubclass(item, Section)}
             self.__dict__ = {**self.__dict__, **sections}
-            if not os.path.isfile(os.path.join(self.__conf_path, self.__conf_file)):
+            if not path.isfile(path.join(self.__conf_path, self.__conf_file)):
                 self.__logger.warning("Config file '{}' not found".format(self.__conf_file))
                 for key, section in sections.items():
                     self.__parser.add_section(key)
@@ -67,7 +69,7 @@ class Configuration(metaclass=Singleton):
             if not self.__parser.sections():
                 try:
                     self.__logger.info("Opening config file '{}' at '{}'".format(self.__conf_file, self.__conf_path))
-                    self.__parser.read(os.path.join(self.__conf_path, self.__conf_file))
+                    self.__parser.read(path.join(self.__conf_path, self.__conf_file))
                     self.__syncConfig(sections)
                     self.__logger.info("Successfully loaded configuration from '{}'".format(self.__conf_file))
                 except Exception as ex:
@@ -177,7 +179,7 @@ class Configuration(metaclass=Singleton):
 
     def __writeConfFile(self):
         try:
-            with open(os.path.join(self.__conf_path, self.__conf_file), 'w') as cf:
+            with open(path.join(self.__conf_path, self.__conf_file), 'w') as cf:
                 self.__parser.write(cf)
         except Exception as ex:
             self.__logger.error("Writing to config file '{}' failed - {}".format(self.__conf_file, ex))
