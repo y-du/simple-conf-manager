@@ -77,7 +77,7 @@ Usage
 #### Defining configurations
 
 To create a configuration create a `class` and decorate it with `@configuration`.
-Within this class you add sections to your configuartion by creating further classes and decorating them with `@section`.
+Within this class you add sections to your configuration by creating further classes and decorating them with `@section`.
 Sections house the keys and default values in the form of class attributes.
 There's no limit to how many configurations you create just make sure to use different config files.
 
@@ -97,7 +97,7 @@ To use your configuration you must instantiate it first.
 Multiple instantiations of the same configuration will always yield the same instance. 
 By using the `@configuration` decorator the init signature changes:
 
-    conf = MyConf(conf_file, user_path=None, ext_aft_crt=True, pers_def=True)
+    conf = MyConf(conf_file, user_path=None, ext_aft_crt=True, pers_def=True, load=True)
 
 - `conf_file` required, name of the config file as a string.
 
@@ -106,6 +106,15 @@ By using the `@configuration` decorator the init signature changes:
 - `ext_aft_crt` exit the script after config file creation, set to `False` if execution should continue.
 
 - `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, if the value is to remain empty set to `False`.
+
+- `load` if set to `False` loading from the configuration file can be deferred and triggered manually with the provided `loadConfig` function at later point in time.
+    
+        my_conf = MyConf("my_conf.conf", load=False)
+        
+        # do something
+        # my_conf will access the default values of MyConf during this time
+        
+        loadConfig(my_conf) 
 
 
 #### Setting and getting values
@@ -118,6 +127,31 @@ Setting and getting values is straightforward:
     value = configuration.section.key   # get
 
 Possible types are: `str`, `int`, `float`, `complex`, `bool`, `NoneType`. Other types will be treated as strings.
+
+
+#### Overriding values via environment variables
+
+Values of keys can be temporarily overridden by setting environment variables with the following naming scheme:
+
+`CONFIGURATION_SECTION="key_1:value;key_2:value; ... key_x:value"`
+
+During initialization `simple-conf-manager` will check if matching environment variables exist and set the values for the provided keys.
+Not all keys of a section must be provided but it's important to delimit keys and their values with `:` and key-value pairs with `;`.
+
+For example if `key_a` and `key_b` of the below configuration are to be overridden
+
+    @configuration
+    class MyConf:
+
+        @section
+        class MySection:
+            key_a = "Ham"
+            key_b = False
+            key_c = 123
+
+The corresponding environment variable should be defined as followed:
+
+`MYCONF_MYSECTION="key_a:Spam;key_b:True"`
 
 
 #### Logging
