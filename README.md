@@ -108,7 +108,7 @@ By using the `@configuration` decorator the init signature changes:
 
 - `pers_def` if a key's value is removed from the config file and a default value exists write back the default value, if the value is to remain empty set to `False`.
 
-- `load` if set to `False` loading from the configuration file can be deferred and triggered manually with the provided `loadConfig` function at later point in time.
+- `load` if set to `False` loading from the configuration file can be deferred and triggered manually with the provided `loadConfig` function at a later point in time.
     
         my_conf = MyConf("my_conf.conf", load=False)
         
@@ -139,7 +139,7 @@ Values of keys can be temporarily overridden by setting environment variables wi
 During initialization `simple-conf-manager` will check if matching environment variables exist and set the values for the provided keys.
 Not all keys of a section must be provided but it's important to delimit keys and their values with `:` and key-value pairs with `;`.
 
-For example if `key_a` and `key_b` of the below configuration are to be overridden
+For example if `key_a` and `key_b` of the below configuration are to be overridden:
 
     @configuration
     class MyConf:
@@ -150,7 +150,7 @@ For example if `key_a` and `key_b` of the below configuration are to be overridd
             key_b = False
             key_c = 123
 
-The corresponding environment variable should be defined as followed:
+The corresponding environment variable should be defined as follows:
 
 `MYCONF_MYSECTION="key_a:Spam;key_b:True"`
 
