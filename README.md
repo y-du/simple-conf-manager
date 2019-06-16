@@ -13,6 +13,7 @@ Define configuration structures, read and write config files and access your con
     + [Defining configurations](#defining-configurations)
     + [Initializing configurations](#initializing-configurations)
     + [Setting and getting values](#setting-and-getting-values)
+    + [Overriding values via environment variables](#overriding-values-via-environment-variables)
     + [Logging](#logging)
 
 ---
