@@ -14,13 +14,13 @@
    limitations under the License.
 """
 
-__version__ = '0.6.0'
+__version__ = '1.0.0'
 __title__ = 'simple-conf-manager'
 __description__ = 'Define configuration structures, read and write config files and access your configuration via an object tree that plays well with IDE code completion.'
 __url__ = 'https://github.com/y-du/simple-conf-manager'
 __author__ = 'Yann Dumont'
 __license__ = 'Apache License 2.0'
-__copyright__ = 'Copyright (c) 2018 Yann Dumont'
+__copyright__ = 'Copyright (c) 2019 Yann Dumont'
 
 
 from .manager import *
