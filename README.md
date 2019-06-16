@@ -41,10 +41,10 @@ Quick start
         @section
         class MySection:
             val_1 = 123
-            val_2 = 'test'
+            val_2 = "test"
             val_3 = True
 
-    conf = MyConf('test.conf')
+    conf = MyConf("test.conf")
     
     print(conf.MySection.val_1) # -> 123
     conf.MySection.val_1 = 456  # set attribute and write to test.conf
@@ -89,7 +89,7 @@ There's no limit to how many configurations you create just make sure to use dif
 
         @section
         class MySection:
-            key = 'value'
+            key = "value"
 
 
 #### Initializing configurations
@@ -123,7 +123,7 @@ By using the `@configuration` decorator the init signature changes:
 During runtime values are stored in attributes housed in objects representing the respective sections.
 Setting and getting values is straightforward:
  
-    configuration.section.key = 'value' # set
+    configuration.section.key = "value" # set
 
     value = configuration.section.key   # get
 
@@ -161,7 +161,7 @@ If your project uses the python `logging` facility you can combine the output pr
 
 Retrieve the "simple-conf" logger via:
 
-    logger = logging.getLogger('simple-conf')
+    logger = logging.getLogger("simple-conf")
 
 Add your handler to the logger and optionally set the desired level:
 
