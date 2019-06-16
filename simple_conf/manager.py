@@ -40,6 +40,8 @@ class Singleton(type):
 
 class Configuration(metaclass=Singleton):
     def __init__(self, conf_file: str, user_path: str = None, ext_aft_crt: bool = True, pers_def: bool = True, load: bool = True):
+        if not all((isinstance(conf_file, str), isinstance(user_path, (str, type(None))), isinstance(ext_aft_crt, bool), isinstance(pers_def, bool), isinstance(load, bool))):
+            raise TypeError
         self.__conf_path = user_path if user_path else path.abspath(path.split(getfile(stack()[-1].frame))[0])
         self.__conf_file = conf_file
         self.__ext_aft_crt = ext_aft_crt
@@ -198,8 +200,10 @@ def configuration(cls):
     return sub_cls
 
 
-    config._Configuration__initConfig()
 def loadConfig(config: object):
+    if not isinstance(config, Configuration):
+        raise TypeError(type(config))
+    config._Configuration__loadConfig()
 
 
 class Section:
