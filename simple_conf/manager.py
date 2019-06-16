@@ -15,7 +15,7 @@
 """
 
 
-__all__ = ('configuration', 'section', 'initConfig')
+__all__ = ('configuration', 'section', 'loadConfig')
 
 
 from threading import Lock
@@ -51,7 +51,7 @@ class Configuration(metaclass=Singleton):
         if init:
             self.__initConfig()
 
-    def __initConfig(self):
+    def __loadConfig(self):
         if not self.__initiated:
             sections = {item.__name__: item(self.__setKey, self.__lock) for item in self.__class__.__dict__.values() if isclass(item) and issubclass(item, Section)}
             self.__dict__ = {**self.__dict__, **sections}
@@ -198,8 +198,8 @@ def configuration(cls):
     return sub_cls
 
 
-def initConfig(config):
     config._Configuration__initConfig()
+def loadConfig(config: object):
 
 
 class Section:
