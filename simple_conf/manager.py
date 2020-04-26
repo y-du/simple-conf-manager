@@ -144,7 +144,7 @@ class Configuration(metaclass=Singleton):
         return str(value) if not type(value) is type(None) else ''
 
     def __loadValue(self, value: str):
-        if len(value) is 0:
+        if len(value) == 0:
             return None
         elif value.isalpha():
             if value in 'True':
